@@ -1,7 +1,8 @@
-import { Link, usePathname } from 'expo-router';
+import { supabase } from '@/core/supabase';
+import { usePathname, useRouter } from 'expo-router';
 import { Calendar, Home, LogOut, Settings, Users } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 const MENU_ITEMS = [
   { name: 'Dashboard', icon: Home, path: '/' },
@@ -12,51 +13,152 @@ const MENU_ITEMS = [
 
 export const Sidebar = () => {
   const pathname = usePathname();
+  const router = useRouter();
+
+  // --- FUNCIÓN DE LOGOUT ---
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
+      router.replace('/login');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      Alert.alert('Error', 'No se pudo cerrar la sesión.');
+    }
+  };
 
   return (
-    <View className="hidden md:flex w-64 h-full bg-brand-dark flex-col justify-between p-6">
-      <View>
-        <View className="mb-8">
-          <Text className="text-white text-2xl font-bold tracking-tighter">
-            RE<Text className="text-brand-red">activate</Text>
-          </Text>
-          <Text className="text-gray-400 text-xs uppercase tracking-widest">
-            Bienestar y entreno
-          </Text>
-        </View>
+    <View style={styles.container}>
 
-        {/* Navegación */}
-        <View className="space-y-2">
-          {MENU_ITEMS.map((item) => {
-            const isActive = pathname === item.path;
-            const Icon = item.icon;
-            
-            return (
-              <Link key={item.path} href={item.path as any} asChild>
-                <Pressable 
-                  className={`flex-row items-center space-x-3 p-3 rounded-lg transition-all ${
-                    isActive ? 'bg-brand-red' : 'hover:bg-gray-800'
-                  }`}
-                >
-                  <Icon 
-                    size={20} 
-                    color={isActive ? '#FFFFFF' : '#9CA3AF'} 
-                  />
-                  <Text className={`font-medium ${isActive ? 'text-white' : 'text-gray-400'}`}>
-                    {item.name}
-                  </Text>
-                </Pressable>
-              </Link>
-            );
-          })}
-        </View>
+      {/* 1. Header / Logo Branding */}
+      <View style={styles.header}>
+        <Text style={styles.logoText}>
+          RE<Text style={styles.logoHighlight}>activate</Text>
+        </Text>
+        <Text style={styles.tagline}>BIENESTAR Y ENTRENO</Text>
       </View>
 
-      {/* Footer / Logout */}
-      <Pressable className="flex-row items-center space-x-3 p-3 mt-auto">
-        <LogOut size={20} color="#9CA3AF" />
-        <Text className="text-gray-400 font-medium">Cerrar Sesión</Text>
-      </Pressable>
+      {/* 2. Menú de Navegación */}
+      <View style={styles.navContainer}>
+        {MENU_ITEMS.map((item) => {
+          const isActive = pathname === item.path;
+          const Icon = item.icon;
+
+          return (
+            <Pressable
+              key={item.path}
+              onPress={() => router.push(item.path as any)}
+              style={({ pressed }) => [
+                styles.menuItem,
+                isActive && styles.menuItemActive,
+                pressed && { opacity: 0.7 }
+              ]}
+            >
+              <Icon
+                size={20}
+                color={isActive ? '#FFFFFF' : '#A3A3A3'}
+              />
+              <Text style={[
+                styles.menuText,
+                isActive && styles.menuTextActive
+              ]}>
+                {item.name}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {/* 3. Footer / Logout */}
+      <View style={styles.footerContainer}>
+        <Pressable
+          onPress={handleLogout} // <--- AQUÍ CONECTAMOS LA LÓGICA
+          style={({ pressed }) => [
+            styles.logoutButton,
+            pressed && { opacity: 0.7 }
+          ]}
+        >
+          <LogOut size={20} color="#A3A3A3" />
+          <Text style={styles.logoutText}>Cerrar Sesión</Text>
+        </Pressable>
+      </View>
+
     </View>
   );
 };
+
+// --- ESTILOS NATIVOS ---
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#171717',
+    padding: 24,
+    width: '100%',
+    height: '100%',
+  },
+  // Header
+  header: {
+    marginBottom: 40,
+  },
+  logoText: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  logoHighlight: {
+    color: '#DC2626',
+  },
+  tagline: {
+    color: '#525252',
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 4,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
+  // Navegación
+  navContainer: {
+    flexDirection: 'column',
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  menuItemActive: {
+    backgroundColor: '#DC2626',
+  },
+  menuText: {
+    marginLeft: 12,
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#A3A3A3',
+  },
+  menuTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  // Footer
+  footerContainer: {
+    marginTop: 'auto',
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#262626',
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  logoutText: {
+    marginLeft: 12,
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#A3A3A3',
+  },
+});

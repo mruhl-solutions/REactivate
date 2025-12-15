@@ -7,8 +7,8 @@ export default function DashboardScreen() {
   const router = useRouter();
 
   return (
-    <ScrollView 
-      style={styles.container} 
+    <ScrollView
+      style={styles.container}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
@@ -22,7 +22,7 @@ export default function DashboardScreen() {
         </View>
 
         {/* Botón CTA */}
-        <Pressable 
+        <Pressable
           onPress={() => router.push('/agenda')}
           style={({ pressed }) => [
             styles.ctaButton,
@@ -36,11 +36,11 @@ export default function DashboardScreen() {
 
       {/* --- KPI CARDS (Métricas) --- */}
       <View style={styles.kpiContainer}>
-        
+
         {/* Card 1: Turnos */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <View style={[styles.iconBox, { backgroundColor: '#FEF2F2' }]}> 
+            <View style={[styles.iconBox, { backgroundColor: '#FEF2F2' }]}>
               <Calendar size={24} color="#DC2626" />
             </View>
             <Text style={styles.kpiValue}>12</Text>
@@ -51,7 +51,7 @@ export default function DashboardScreen() {
         {/* Card 2: Clientes */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <View style={[styles.iconBox, { backgroundColor: '#F5F5F5' }]}> 
+            <View style={[styles.iconBox, { backgroundColor: '#F5F5F5' }]}>
               <Users size={24} color="#171717" />
             </View>
             <Text style={styles.kpiValue}>85</Text>
@@ -62,7 +62,7 @@ export default function DashboardScreen() {
         {/* Card 3: Alertas (Borde rojo) */}
         <View style={[styles.card, styles.cardAlert]}>
           <View style={styles.cardHeader}>
-            <View style={[styles.iconBox, { backgroundColor: '#FEF2F2' }]}> 
+            <View style={[styles.iconBox, { backgroundColor: '#FEF2F2' }]}>
               <AlertCircle size={24} color="#DC2626" />
             </View>
             <Text style={[styles.kpiValue, { color: '#DC2626' }]}>4</Text>
@@ -78,7 +78,7 @@ export default function DashboardScreen() {
           <Activity size={20} color="#DC2626" />
           <Text style={styles.sectionTitle}>Actividad Reciente</Text>
         </View>
-        
+
         <View style={styles.emptyState}>
           <Text style={styles.emptyText}>
             El flujo de actividad se cargará aquí al conectar la base de datos.
