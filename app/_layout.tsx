@@ -6,7 +6,12 @@ export default function RootLayout() {
   return (
     <>
       <StatusBar barStyle="light-content" backgroundColor="#171717" />
-      <Stack screenOptions={{ headerShown: false }} />
+
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(admin)" />
+      </Stack>
     </>
   );
 }

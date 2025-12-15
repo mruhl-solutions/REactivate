@@ -9,8 +9,13 @@ export const COLORS = {
   textLight: '#9CA3AF',    // Gris claro (Placeholders, subtítulos)
   border: '#E5E7EB',       // Líneas divisorias
   success: '#10B981',      // Verdes
+  textGray: '#6B7280',   // Texto secundario
+  textDark: '#111827',   // Texto principal
   warning: '#F59E0B',      // Amarillos
   danger: '#EF4444',       // Rojos de error
+  black: '#1D1D1D',      // Negro fondo
+  white: '#FFFFFF',
+  reactivate: '#E63946',
 };
 
 export const GLOBAL_STYLES = StyleSheet.create({
@@ -19,7 +24,6 @@ export const GLOBAL_STYLES = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 5,
-    elevation: 8, // Sombra para Android
   },
   cardShadow: {
     shadowColor: "#000",

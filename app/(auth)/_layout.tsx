@@ -12,6 +12,6 @@ export default function AuthLayout() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#171717', // Fondo oscuro para login
+        backgroundColor: '#171717',
     }
 });

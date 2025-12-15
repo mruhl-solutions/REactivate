@@ -1,14 +1,13 @@
 import { supabase } from '@/core/supabase';
 import { usePathname, useRouter } from 'expo-router';
-import { Calendar, Home, LogOut, Settings, Users } from 'lucide-react-native';
+import { Calendar, Home, LogOut, Users } from 'lucide-react-native';
 import React from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 const MENU_ITEMS = [
-  { name: 'Dashboard', icon: Home, path: '/' },
-  { name: 'Clientes', icon: Users, path: '/clientes' },
-  { name: 'Turnos', icon: Calendar, path: '/turnos' },
-  { name: 'Configuración', icon: Settings, path: '/config' },
+  { name: 'Panel de control', icon: Home, path: '/(admin)' },
+  { name: 'Clientes', icon: Users, path: '/(admin)/clientes' },
+  { name: 'Turnos', icon: Calendar, path: '/(admin)/turnos' },
 ];
 
 export const Sidebar = () => {
@@ -31,20 +30,17 @@ export const Sidebar = () => {
   return (
     <View style={styles.container}>
 
-      {/* 1. Header / Logo Branding */}
       <View style={styles.header}>
         <Text style={styles.logoText}>
-          RE<Text style={styles.logoHighlight}>activate</Text>
+          <Text style={styles.logoHighlight}>RE</Text>activate
         </Text>
-        <Text style={styles.tagline}>BIENESTAR Y ENTRENO</Text>
+        <Text style={styles.tagline}>BIENESTAR Y ENTRENAMIENTO</Text>
       </View>
 
-      {/* 2. Menú de Navegación */}
       <View style={styles.navContainer}>
         {MENU_ITEMS.map((item) => {
           const isActive = pathname === item.path;
           const Icon = item.icon;
-
           return (
             <Pressable
               key={item.path}
@@ -73,7 +69,7 @@ export const Sidebar = () => {
       {/* 3. Footer / Logout */}
       <View style={styles.footerContainer}>
         <Pressable
-          onPress={handleLogout} // <--- AQUÍ CONECTAMOS LA LÓGICA
+          onPress={handleLogout}
           style={({ pressed }) => [
             styles.logoutButton,
             pressed && { opacity: 0.7 }
