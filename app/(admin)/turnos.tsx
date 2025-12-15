@@ -1,21 +1,75 @@
-import { supabase } from '@/core/supabase';
-import { addDays, addWeeks, endOfDay, format, getHours, isSameDay, parseISO, startOfDay, startOfWeek, subWeeks } from 'date-fns';
+import { addDays, addWeeks, endOfDay, format, getHours, isSameDay, parseISO, setHours, startOfDay, startOfWeek, subWeeks } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+
+// --- 1. CONFIGURACIÓN Y TIPOS ---
 
 const HORAS_OPERATIVAS = [7, 8, 9, 10, 11, 14, 15, 16, 17, 18, 19, 20];
 
 export interface Turno {
     id: string;
     fecha_hora_inicio: string; // ISO String
-    actividad: 'Entreno' | 'Rehab' | 'Masaje';
+    actividad: 'Entrenamiento' | 'Rehabilitacion' | 'Masaje';
     asistio: boolean;
     clientes: {
         nombre: string;
     } | null;
 }
+
+const getSmartDate = (dayOffset: number, hour: number) => {
+    const today = new Date();
+    const startOfCurrentWeek = startOfWeek(today, { weekStartsOn: 1 });
+    const targetDay = addDays(startOfCurrentWeek, dayOffset);
+    const targetDate = setHours(targetDay, hour);
+    return targetDate.toISOString();
+};
+
+const MOCK_TURNOS: Turno[] = [
+    {
+        id: '1',
+        fecha_hora_inicio: getSmartDate(0, 9), // Lunes 9:00
+        actividad: 'Entrenamiento',
+        asistio: true,
+        clientes: { nombre: 'Matias Ruhl' }
+    },
+    {
+        id: '2',
+        fecha_hora_inicio: getSmartDate(0, 14), // Lunes 14:00
+        actividad: 'Rehabilitacion',
+        asistio: true,
+        clientes: { nombre: 'Matias Ruhl' }
+    },
+    {
+        id: '3',
+        fecha_hora_inicio: getSmartDate(1, 10), // Martes 10:00
+        actividad: 'Entrenamiento',
+        asistio: true,
+        clientes: { nombre: 'Matias Ruhl' }
+    },
+    {
+        id: '4',
+        fecha_hora_inicio: getSmartDate(2, 16), // Miércoles 16:00
+        actividad: 'Masaje',
+        asistio: true,
+        clientes: { nombre: 'Matias Ruhl' }
+    },
+    {
+        id: '5',
+        fecha_hora_inicio: getSmartDate(3, 8), // Jueves 8:00
+        actividad: 'Entrenamiento',
+        asistio: true,
+        clientes: { nombre: 'Matias Ruhl' }
+    },
+    {
+        id: '6',
+        fecha_hora_inicio: getSmartDate(4, 18), // Viernes 18:00
+        actividad: 'Rehabilitacion',
+        asistio: true,
+        clientes: { nombre: 'Matias Ruhl' }
+    }
+];
 
 export default function TurnosScreen() {
     // Estado para controlar qué semana estamos viendo (siempre empieza en Lunes)
@@ -27,24 +81,42 @@ export default function TurnosScreen() {
     const fetchTurnosSemana = useCallback(async () => {
         setLoading(true);
         try {
-            // Calculamos rango de fechas para la query (Lunes 00:00 a Viernes 23:59)
-            const inicioSemana = startOfDay(lunesActual).toISOString();
-            const finSemana = endOfDay(addDays(lunesActual, 4)).toISOString();
+            // --- MODO MOCK ACTIVADO ---
+            // Simulamos un pequeño delay de red
+            await new Promise(resolve => setTimeout(resolve, 600));
+
+            // Filtramos los MOCK_TURNOS para que solo muestre los de la semana seleccionada
+            // (Esto simula la query .gte .lte de Supabase)
+            const inicioSemana = startOfDay(lunesActual);
+            const finSemana = endOfDay(addDays(lunesActual, 4)); // Viernes
+
+            const turnosFiltrados = MOCK_TURNOS.filter(t => {
+                const fecha = parseISO(t.fecha_hora_inicio);
+                return fecha >= inicioSemana && fecha <= finSemana;
+            });
+
+            setTurnos(turnosFiltrados);
+
+            /* // --- CÓDIGO ORIGINAL SUPABASE (DESCOMENTAR CUANDO ESTÉS LISTO) ---
+            const inicioSemanaISO = startOfDay(lunesActual).toISOString();
+            const finSemanaISO = endOfDay(addDays(lunesActual, 4)).toISOString();
 
             const { data, error } = await supabase
                 .from('turnos')
                 .select(`
-          id,
-          fecha_hora_inicio,
-          actividad,
-          asistio,
-          clientes ( nombre )
-        `)
-                .gte('fecha_hora_inicio', inicioSemana)
-                .lte('fecha_hora_inicio', finSemana);
+                  id,
+                  fecha_hora_inicio,
+                  actividad,
+                  asistio,
+                  clientes ( nombre )
+                `)
+                .gte('fecha_hora_inicio', inicioSemanaISO)
+                .lte('fecha_hora_inicio', finSemanaISO);
 
             if (error) throw error;
-            setTurnos(data as any); // Casteo forzado por la relación anidada
+            setTurnos(data as any); 
+            */
+
         } catch (error: any) {
             Alert.alert('Error', 'No se pudieron cargar los turnos: ' + error.message);
         } finally {
@@ -100,7 +172,7 @@ export default function TurnosScreen() {
                         <View style={styles.dateDisplay}>
                             <CalendarIcon size={16} color="#737373" style={{ marginRight: 8 }} />
                             <Text style={styles.weekText}>
-                                {format(lunesActual, "d 'de' MMMM", { locale: es })} - {format(addDays(lunesActual, 4), "d 'de' MMMM", { locale: es })}
+                                {format(lunesActual, "d MMM", { locale: es })} - {format(addDays(lunesActual, 4), "d MMM", { locale: es })}
                             </Text>
                         </View>
 
@@ -115,7 +187,7 @@ export default function TurnosScreen() {
                     onPress={() => Alert.alert('Próximamente', 'Formulario de Creación de Turno')}
                 >
                     <Plus size={20} color="white" />
-                    <Text style={styles.addButtonText}>Nuevo Turno</Text>
+                    <Text style={styles.addButtonText}>Nuevo</Text>
                 </Pressable>
             </View>
 
@@ -131,7 +203,7 @@ export default function TurnosScreen() {
                         <View style={styles.timeColumnHeader} /> {/* Espacio vacío para la columna de hora */}
                         {diasSemana.map((dia, index) => (
                             <View key={index} style={styles.dayHeaderCell}>
-                                <Text style={styles.dayName}>{format(dia, 'EEEE', { locale: es })}</Text>
+                                <Text style={styles.dayName}>{format(dia, 'EEE', { locale: es })}</Text>
                                 <Text style={styles.dayNumber}>{format(dia, 'd')}</Text>
                             </View>
                         ))}
@@ -163,7 +235,7 @@ export default function TurnosScreen() {
                                                     </Text>
                                                 </Pressable>
                                             ) : (
-                                                // Celda Vacía (Área Interactiva futura)
+                                                // Celda Vacía
                                                 <Pressable
                                                     style={({ pressed }) => [styles.emptyCell, pressed && { backgroundColor: '#F5F5F5' }]}
                                                     onPress={() => Alert.alert('Crear', `Crear turno el ${format(dia, 'EEEE')} a las ${hora}:00`)}
@@ -196,7 +268,9 @@ const styles = StyleSheet.create({
     },
     // HEADER
     header: {
-        padding: 24,
+        paddingTop: 40, // Espacio para status bar
+        paddingHorizontal: 16,
+        paddingBottom: 16,
         backgroundColor: '#FFFFFF',
         borderBottomWidth: 1,
         borderBottomColor: '#E5E5E5',
@@ -205,7 +279,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     title: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: 'bold',
         color: '#171717',
     },
@@ -213,25 +287,25 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginTop: 8,
-        gap: 12,
+        gap: 8,
     },
     dateDisplay: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#F5F5F5',
         paddingVertical: 6,
-        paddingHorizontal: 12,
+        paddingHorizontal: 10,
         borderRadius: 8,
     },
     weekText: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: '600',
         color: '#171717',
         textTransform: 'capitalize',
     },
     iconBtn: {
-        padding: 4,
-        borderRadius: 4,
+        padding: 6,
+        borderRadius: 6,
         backgroundColor: '#FFFFFF',
         borderWidth: 1,
         borderColor: '#E5E5E5',
@@ -240,20 +314,21 @@ const styles = StyleSheet.create({
         backgroundColor: '#DC2626',
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 10,
-        paddingHorizontal: 16,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
         borderRadius: 8,
     },
     addButtonText: {
         color: '#FFFFFF',
         fontWeight: '600',
-        marginLeft: 8,
+        fontSize: 14,
+        marginLeft: 4,
     },
 
     // GRILLA
     gridContainer: {
         flex: 1,
-        padding: 16,
+        padding: 8,
     },
     gridHeaderRow: {
         flexDirection: 'row',
@@ -263,7 +338,7 @@ const styles = StyleSheet.create({
         paddingBottom: 8,
     },
     timeColumnHeader: {
-        width: 60, // Ancho fijo para la columna de horas
+        width: 50, // Ancho fijo para la columna de horas
     },
     dayHeaderCell: {
         flex: 1,
@@ -271,14 +346,14 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     dayName: {
-        fontSize: 12,
+        fontSize: 10,
         color: '#737373',
         textTransform: 'uppercase',
         fontWeight: '600',
         marginBottom: 2,
     },
     dayNumber: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: 'bold',
         color: '#171717',
     },
@@ -286,28 +361,28 @@ const styles = StyleSheet.create({
     // FILAS DE LA GRILLA
     gridRow: {
         flexDirection: 'row',
-        height: 80, // Altura fija de cada hora
+        height: 70, // Altura ajustada
         borderBottomWidth: 1,
         borderBottomColor: '#E5E5E5',
     },
     timeCell: {
-        width: 60,
-        justifyContent: 'flex-start', // Hora alineada arriba
+        width: 50,
+        justifyContent: 'flex-start',
         alignItems: 'center',
         paddingTop: 8,
         borderRightWidth: 1,
         borderRightColor: '#E5E5E5',
     },
     timeText: {
-        fontSize: 12,
+        fontSize: 11,
         color: '#737373',
         fontWeight: '500',
     },
     cell: {
-        flex: 1, // Las celdas de días ocupan el espacio restante equitativamente
+        flex: 1,
         borderRightWidth: 1,
-        borderRightColor: '#E5E5E5', // Líneas verticales
-        padding: 4,
+        borderRightColor: '#E5E5E5',
+        padding: 2,
     },
     emptyCell: {
         flex: 1,
@@ -318,18 +393,18 @@ const styles = StyleSheet.create({
     // TARJETA DE EVENTO (TURNO)
     eventCard: {
         flex: 1,
-        borderRadius: 6,
-        padding: 6,
+        borderRadius: 4,
+        padding: 4,
         borderLeftWidth: 3,
         justifyContent: 'center',
     },
     eventTitle: {
-        fontSize: 12,
+        fontSize: 10,
         fontWeight: 'bold',
         marginBottom: 2,
     },
     eventType: {
-        fontSize: 10,
+        fontSize: 9,
         opacity: 0.8,
     },
 });
