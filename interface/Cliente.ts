@@ -1,9 +1,12 @@
 export interface Cliente {
-  id: string;
+  id: number;
   nombre: string;
   telefono: string;
-  fecha_pago_mes: string;
-  tipo_plan: 'Mensual' | 'Trimestral' | 'Clase Suelta';
+  plan_id: number;
+  clases_disponibles: number;
   notas_medicas?: string;
-  created_at: string;
+  tipo_plan?: {
+    nombre: string;
+    clases_totales: number;
+  };
 }
